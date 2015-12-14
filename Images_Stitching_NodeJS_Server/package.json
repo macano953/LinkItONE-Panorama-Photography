@@ -1,0 +1,33 @@
+{
+  "name": "api_rest",
+  "version": "1.0.0",
+  "description": "REST API - image stitching trigger",
+  "main": "api-rest.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "keywords": [
+    "rest",
+    "api",
+    "mysql"
+  ],
+  "author": "macano953",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.13.1",
+    "colors": "^1.1.2",
+    "connect-multiparty": "^2.0.0",
+    "cors": "^2.7.1",
+    "express": "^4.13.0",
+    "gm": "^1.21.1",
+    "jsonwebtoken": "^5.0.2",
+    "jwt-simple": "^0.3.0",
+	  "lwip": "^0.0.8",
+    "method-override": "^2.3.3",
+    "mkdirp": "^0.5.1",
+    "moment": "^2.10.6",
+    "mysql": "^2.7.0",
+    "pm2": "^0.14.5",
+	  "panoramit": "^0.0.1"
+  }
+}

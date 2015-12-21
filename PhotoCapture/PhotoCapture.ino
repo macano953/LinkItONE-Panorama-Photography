@@ -180,6 +180,19 @@ void setup() {
   myCAM2.write_reg(ARDUCHIP_FRAMES, 0x00);
   myCAM3.write_reg(ARDUCHIP_FRAMES, 0x00);
   myCAM4.write_reg(ARDUCHIP_FRAMES, 0x00);
+
+  LWiFi.begin();
+
+  /*!< Trying to connect to the WiFi AP */
+  Serial.println(F("Connecting to AP"));
+  while (0 == LWiFi.connect(WIFI_AP, LWiFiLoginInfo(WIFI_AUTH, WIFI_PASSWORD)))
+  {
+    /*!< Retrying until connected */
+    Serial.println(F("Retrying connection to AP!"));
+    delay(1000);
+  }
+
+  Serial.println(F("Connection established!"));
 }
 
 /*
@@ -199,6 +212,7 @@ void setup() {
 
 void loop() {
   Serial.print("Everything configured properly. Let's take some pictures...");
+  Serial.println("Getting GPS Data");
   pic_checker = 0; /*!< Initialize pictures counter to 0 */ 
   LGPS.powerOn(); /*!< Get GPS data and upload location and speed*/ 
   char GPS_formatted[] = "GPS fixed";
@@ -211,6 +225,7 @@ void loop() {
   sprintf(buffer_longitude, "%2.6f", gpsPosition->longitude);
   LGPS.powerOff();
 
+  Serial.println(F("ArduCAM start-up..."));
   /*!< Powering up cameras*/
   delay(1000);
   myCAM1.clear_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK); 
@@ -219,7 +234,7 @@ void loop() {
   myCAM4.clear_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK); 
   delay(1000);
   
-  /*!< Get GPS data and upload location and speed*/
+  /*!< Clear old pictures and start a new capture*/
   myCAM1.flush_fifo();
   myCAM2.flush_fifo();
   myCAM3.flush_fifo();
@@ -245,21 +260,8 @@ void loop() {
   myCAM3.set_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK); 
   myCAM4.set_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK); 
 
+  Serial.println(F("Pictures taken!"));
   previous_time = millis();
-
-  LWiFi.begin();
-
-  /*!< Trying to connect to the WiFi AP */
-  Serial.println(F("Connecting to AP"));
-  while (0 == LWiFi.connect(WIFI_AP, LWiFiLoginInfo(WIFI_AUTH, WIFI_PASSWORD)))
-  {
-    /*!< Retrying until connected */
-    Serial.println(F("Retrying connection to AP!"));
-    delay(1000);
-  }
-
-  Serial.println(F("Connected!"));
-  Serial.println(F("ArduCAM Start!"));
 
   /*!< Trying to connect to server_IP:3000 */
   Serial.println("Connecting to the server...");
@@ -269,8 +271,15 @@ void loop() {
     delay(1000);
   }
   Serial.println("Connected to the server");
-  //long timestamp = get_timestamp(c);
-
+  long timestamp = get_timestamp(c);
+  
+  Serial.println("Connecting to the server...");
+  while (0 == c.connect(SITE_URL, 3000))
+  {
+    Serial.println("Re-Connecting to the server");
+    delay(1000);
+  }
+  Serial.println("Connected to the server");
   /*!< If there is a camera attached to CS 4, read image bytes */
   if (cam1 == true)
   {
@@ -341,7 +350,6 @@ void loop() {
   else {
     Serial.println(F("Error: couldn't take 4 pictures"));
   }
-  LWiFi.end();
   /*!< PICTURES_RECURRENCY = TIME TO UPLOAD 4 PICTURES + RECURRENCE_TIME */
   delay(RECURRENCE_TIME);
 }

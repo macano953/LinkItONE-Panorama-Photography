@@ -1,0 +1,23 @@
+{
+  "name": "api_rest",
+  "version": "1.0.0",
+  "description": "REST API - image stitching trigger",
+  "main": "api-rest.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "keywords": [
+    "rest",
+    "api"
+  ],
+  "author": "macano953",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.13.1",
+    "cors": "^2.7.1",
+    "express": "^4.13.0",
+	  "lwip": "^0.0.8",
+    "method-override": "^2.3.3",
+	  "panorama": "^0.0.1"
+  }
+}

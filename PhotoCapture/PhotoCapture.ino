@@ -50,6 +50,7 @@ char* buffer_latitude;
 char* buffer_longitude;
 unsigned long previous_time = 0; /*!< Time counter init */
 unsigned short int pic_checker = 0; /*!< Counter that checks if 4 pictures have been really taken or not */
+unsigned long timestamp = 0;
 LWiFiClient c;
 
 /*
@@ -271,7 +272,7 @@ void loop() {
     delay(1000);
   }
   Serial.println("Connected to the server");
-  long timestamp = get_timestamp(c);
+  timestamp = get_timestamp(c);
   
   Serial.println("Connecting to the server...");
   while (0 == c.connect(SITE_URL, 3000))
@@ -361,7 +362,7 @@ void loop() {
  *   Then performs a HTTP POST Request to the server. 
  *
  *   To avoid memory issues on board, images have to be transmitted splitted
- *   in chunks of 5kB approximately. We store them on the heap, dinamically 
+ *   into 5kB chunks approximately. We store them on the heap, dinamically 
  *   allocating every image packet. The consecutive data chunks are converted
  *   to Base64 (https://en.wikipedia.org/wiki/Base64) to transmit them over 
  *   a channel that is not prepared to deal with binary data itself (non-printable
@@ -388,22 +389,12 @@ void read_fifo_burst_encode(ArduCAM myCAM, LWiFiClient client, char * image) {
   size_t encodedLen;
 
   length = myCAM.read_fifo_length();
-  length--;
-  image_chunk = (char*) calloc (4000, sizeof(char)); /*!< Dynamically allocating memory space 
-                                                      to image chunks (both raw and decoded) */
-  if (image_chunk == NULL) return;
-  encoded_chunk = (char*) calloc (5500, sizeof(char));
-  if (encoded_chunk == NULL) return;
-  total_encoded_len = 4 * ((length + 2) / 3); /*!< To calculate Base64 overload */
-
-  Serial.println(length);
-  Serial.println(total_encoded_len);
   if (length >= 524288 ) /*!< 524 kB at most */
   {
     Serial.println("Over size.");
     return;
   }
-  else if (length == 0 ) /*!< 524 kB at least */
+  else if (length == 0 ) /*!< 0 kB at least */
   {
     Serial.println("Size is 0.");
     return;
@@ -411,32 +402,40 @@ void read_fifo_burst_encode(ArduCAM myCAM, LWiFiClient client, char * image) {
   else { /*!< Length OK */
     int VM_TCP_RESULT0 = 0; /*!< WiFi module response: bytes transmitted or error code */
     int index = 0; /*!< Iterator */
-    int lenToSend; /*!< Encoded image chunk */
     size_t encodedLen; /*!< Encoded image length */
     char * ptr_encoded_chunk; /*!< Auxiliar pointer to image chunks */
+    /*!< Dynamically allocating memory space to image chunks (both raw and decoded) */
+    image_chunk = (char*) calloc (4000, sizeof(char)); 
+    if (image_chunk == NULL) return;
+    encoded_chunk = (char*) calloc (5500, sizeof(char));
+    if (encoded_chunk == NULL) return;
+    total_encoded_len = 4 * ((length + 2) / 3); /*!< To calculate Base64 overload */
+
     myCAM.CS_LOW(); /*!< Selects the camera chip (SPI) - Active low */
     myCAM.set_fifo_burst(); /*!< Set fifo burst mode */
+
     Serial.println("Transmitting data SPI - WiFi client...");
     client.println(F("POST /api/images/upload HTTP/1.1"));
     client.println("Host: " SITE_URL);
     client.println(F("User-Agent: LinkIt/1.0"));
     client.println(F("Connection: keep-alive"));
     client.println(F("Content-Type: application/x-www-form-urlencoded"));
-    client.print(F("Content-Length: "));  /*!< Mandatory parameter (and really important 
-                                          to calculate it well). Otherwise request doesn't 
-                                          reach server */
-    client.println(strlen(DRONE) + strlen(DRONE_ID) + strlen(LAT_VAR) + strlen(buffer_latitude) + strlen(LON_VAR) + strlen(buffer_longitude) + strlen(TIMESTAMP) + strlen(timestamp_example) + strlen(image) + total_encoded_len);
+    client.print(F("Content-Length: "));  /*!< Mandatory parameter (really important 
+                                          to calculate it well). Otherwise requests won't 
+                                          reach the server */
+    client.println(strlen(ID) + strlen(LINKIT_ID) + strlen(LAT_VAR) + strlen(buffer_latitude) + strlen(LON_VAR) + strlen(buffer_longitude) + strlen(TIMESTAMP) + strlen(timestamp) + strlen(image) + total_encoded_len);
     client.println();
-    client.print(DRONE);
-    client.print(DRONE_ID);
+    client.print(ID);
+    client.print(LINKIT_ID);
     client.print(LAT_VAR);
     client.print(buffer_latitude);
     client.print(LON_VAR);
     client.print(buffer_longitude);
     client.print(TIMESTAMP);
-    client.print(timestamp_example);
+    client.print(timestamp);
     client.print(image);
     /*!< While we have bytes to be read... */
+    length--;
     while ( length--) {
       temp_last = temp; /*!< we stored the new byte and set the last one too */
       temp =  SPI.transfer(0x00); /*!< Reading a byte from SPI */
@@ -454,7 +453,7 @@ void read_fifo_burst_encode(ArduCAM myCAM, LWiFiClient client, char * image) {
             encodedLen -= VM_TCP_RESULT0;
           } else {
             Serial.print(VM_TCP_RESULT0);
-            Serial.println(" value ignored");
+            Serial.println(" -> value ignored");
           }
           delay(10); /*!< Needed to give the module time to transmit what it has in the queue */
         }

@@ -1,6 +1,6 @@
 /*!< Including libraries used */
 #include <Wire.h>
-#include <ArduCAM.h>  
+#include <ArduCAM.h>
 #include <SPI.h>
 #include <LGPS.h>
 #include <LWiFi.h>
@@ -15,20 +15,20 @@
 /*!< Defining some macros */
 #define WIFI_AP "my_network" /*!< Define your SSID network */
 #define WIFI_PASSWORD "my_password" /*!< Define your password */
-#define WIFI_AUTH LWIFI_WPA  /*!< LWIFI_OPEN, LWIFI_WPA, or LWIFI_WEP. */ 
-#define SITE_URL "my_server_IP"  
-#define SITE_PORT "my_server_port"  
-#define HTTP_REQUEST "POST /api/images/upload HTTP/1.1"  
-#define USER_AGENT "User-Agent: LinkIt/1.0" 
-#define CONTENT_TYPE "Content-Type: application/x-www-form-urlencoded;" 
-#define CONTENT_LENGTH "Content-Length: " 
-#define ID "id=" 
+#define WIFI_AUTH LWIFI_WPA  /*!< LWIFI_OPEN, LWIFI_WPA, or LWIFI_WEP. */
+#define SITE_URL "my_server_IP"
+#define SITE_PORT "my_server_port"
+#define HTTP_REQUEST "POST /api/images/upload HTTP/1.1"
+#define USER_AGENT "User-Agent: LinkIt/1.0"
+#define CONTENT_TYPE "Content-Type: application/x-www-form-urlencoded;"
+#define CONTENT_LENGTH "Content-Length: "
+#define ID "id="
 #define LINKIT_ID "LNKT0001"
 #define TIMESTAMP "&timestamp="
-#define TIMESTAMP_EXAMPLE "1449235906" 
-#define LAT_VAR "&lat="  
+#define TIMESTAMP_EXAMPLE "1449235906"
+#define LAT_VAR "&lat="
 #define LON_VAR "&lon="
-#define IMAGE1 "&image1="  
+#define IMAGE1 "&image1="
 #define IMAGE2 "&image2="
 #define IMAGE3 "&image3="
 #define IMAGE4 "&image4="
@@ -36,7 +36,7 @@
 
 /*!< Important global variables */
 const int CS1 = 4; /*!< SPI Chip Select (cameras) */
-const int CS2 = 5; 
+const int CS2 = 5;
 const int CS3 = 6;
 const int CS4 = 7;
 ArduCAM myCAM1(OV5642, CS1); /*!< ArduCAM instances */
@@ -45,7 +45,7 @@ ArduCAM myCAM3(OV5642, CS3);
 ArduCAM myCAM4(OV5642, CS4);
 bool cam1 = true, cam2 = true, cam3 = true, cam4 = true; /*!< SPI Chip detection */
 GPSWaypoint* gpsPosition; /*!< Some instances and variables to get GPS location*/
-char buff[256]; 
+char buff[256];
 char* buffer_latitude;
 char* buffer_longitude;
 unsigned long previous_time = 0; /*!< Time counter init */
@@ -56,15 +56,15 @@ LWiFiClient c;
 /*
  * Function: setup
  * ----------------------------
- *   First executed function: 
+ *   First executed function:
         - Initializes and test hardware to be sure it is working properly
-        before operating. 
-        - Identifies camera model. Sets image format & resolution for the cameras. 
+        before operating.
+        - Identifies camera model. Sets image format & resolution for the cameras.
         Erase Arduchip FIFO's content (old pics)
-        - Enables low power mode on cameras.  
- *       
+        - Enables low power mode on cameras.
+ *
  *   receives: nothing
- *   returns: nothing 
+ *   returns: nothing
  * ----------------------------
  */
 
@@ -72,9 +72,9 @@ void setup() {
   uint8_t vid, pid;
   uint8_t temp;
   Serial.begin(115200);
-  SPI.begin(); /*!< initializes SPI bus */ 
-  Wire.begin(); /*!< initializes I2C bus */ 
-  Serial.begin("Serial setup...");
+  SPI.begin(); /*!< initializes SPI bus */
+  Wire.begin(); /*!< initializes I2C bus */
+  Serial.println("Serial setup...");
   pinMode(CS1, OUTPUT); /*!< set the SPI_CS as an output */
   pinMode(CS2, OUTPUT);
   pinMode(CS3, OUTPUT);
@@ -118,7 +118,7 @@ void setup() {
     cam4 = false;
   }
   delay(100);
-  
+
   /*!< Check the camera model taking a look at a camera register specified in the libraries*/
   myCAM1.rdSensorReg16_8(OV5642_CHIPID_HIGH, &vid);
   myCAM1.rdSensorReg16_8(OV5642_CHIPID_LOW, &pid);
@@ -199,26 +199,26 @@ void setup() {
 /*
  * Function: loop
  * ----------------------------
- *   Loops consecutively: 
+ *   Loops consecutively:
         - Powers up GPS module and gets GPS location for the device.
-        - Powers up cameras, takes 4 simultaneous pictures, enables low power. 
-        - Powers up WiFi module and connects to the image processing server.   
+        - Powers up cameras, takes 4 simultaneous pictures, enables low power.
+        - Powers up WiFi module and connects to the image processing server.
         - Tests if 4 pictures have been taken and stored properly.
-        - Measure the amount of time needed to execute the whole process. 
- *       
+        - Measure the amount of time needed to execute the whole process.
+ *
  *   receives: nothing
- *   returns: nothing 
+ *   returns: nothing
  * ----------------------------
  */
 
 void loop() {
   Serial.print("Everything configured properly. Let's take some pictures...");
   Serial.println("Getting GPS Data");
-  pic_checker = 0; /*!< Initialize pictures counter to 0 */ 
-  LGPS.powerOn(); /*!< Get GPS data and upload location and speed*/ 
+  pic_checker = 0; /*!< Initialize pictures counter to 0 */
+  LGPS.powerOn(); /*!< Get GPS data and upload location and speed*/
   char GPS_formatted[] = "GPS fixed";
   gpsPosition = new GPSWaypoint();
-  gpsSentenceInfoStruct gpsDataStruct;  
+  gpsSentenceInfoStruct gpsDataStruct;
   getGPSData(gpsDataStruct, GPS_formatted, gpsPosition);
   buffer_latitude = new char[30];
   sprintf(buffer_latitude, "%2.6f", gpsPosition->latitude);
@@ -229,12 +229,12 @@ void loop() {
   Serial.println(F("ArduCAM start-up..."));
   /*!< Powering up cameras*/
   delay(1000);
-  myCAM1.clear_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK); 
-  myCAM2.clear_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK); 
-  myCAM3.clear_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK); 
-  myCAM4.clear_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK); 
+  myCAM1.clear_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK);
+  myCAM2.clear_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK);
+  myCAM3.clear_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK);
+  myCAM4.clear_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK);
   delay(1000);
-  
+
   /*!< Clear old pictures and start a new capture*/
   myCAM1.flush_fifo();
   myCAM2.flush_fifo();
@@ -256,10 +256,10 @@ void loop() {
   while (!myCAM4.get_bit(ARDUCHIP_TRIG, CAP_DONE_MASK) && cam4);
 
   /*!< Enables low power mode */
-  myCAM1.set_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK); 
-  myCAM2.set_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK); 
-  myCAM3.set_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK); 
-  myCAM4.set_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK); 
+  myCAM1.set_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK);
+  myCAM2.set_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK);
+  myCAM3.set_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK);
+  myCAM4.set_bit(ARDUCHIP_GPIO, GPIO_PWDN_MASK);
 
   Serial.println(F("Pictures taken!"));
   previous_time = millis();
@@ -273,7 +273,7 @@ void loop() {
   }
   Serial.println("Connected to the server");
   timestamp = get_timestamp(c);
-  
+
   Serial.println("Connecting to the server...");
   while (0 == c.connect(SITE_URL, 3000))
   {
@@ -291,7 +291,7 @@ void loop() {
   }
   Serial.println(F("CAM1: capture done!"));
   delay(1000);
-  
+
   /*!< If there is a camera attached to CS 5, read image bytes */
   Serial.println("Connecting to the server...");
   while (0 == c.connect(SITE_URL, 3000))
@@ -308,7 +308,7 @@ void loop() {
   }
   Serial.println(F("CAM2: capture done!"));
   delay(1000);
-  
+
   /*!< If there is a camera attached to CS 6, read image bytes */
   Serial.println("Connecting to the server...");
   while (0 == c.connect(SITE_URL, 3000))
@@ -331,7 +331,7 @@ void loop() {
     Serial.println("Re-Connecting to the server");
     delay(1000);
   }
-  
+
   /*!< If there is a camera attached to CS 7, read image bytes */
   if (cam4 == true)
   {
@@ -341,7 +341,7 @@ void loop() {
     myCAM4.clear_fifo_flag();
   }
   Serial.println(F("CAM4: capture done!"));
-  
+
   /*!< measure how long it took to upload the pictures */
   if (pic_checker == 4) {
     Serial.println(F("4 pictures uploaded"));
@@ -359,27 +359,27 @@ void loop() {
  * Function: read_fifo_burst_encode
  * ----------------------------
  *   Reads byte by byte from FIFO every camera has the picture stored on it.
- *   Then performs a HTTP POST Request to the server. 
+ *   Then performs a HTTP POST Request to the server.
  *
  *   To avoid memory issues on board, images have to be transmitted splitted
- *   into 5kB chunks approximately. We store them on the heap, dinamically 
+ *   into 5kB chunks approximately. We store them on the heap, dinamically
  *   allocating every image packet. The consecutive data chunks are converted
- *   to Base64 (https://en.wikipedia.org/wiki/Base64) to transmit them over 
+ *   to Base64 (https://en.wikipedia.org/wiki/Base64) to transmit them over
  *   a channel that is not prepared to deal with binary data itself (non-printable
- *   characters). It adds almost a 33% of overload per image in total.   
+ *   characters). It adds almost a 33% of overload per image in total.
  *
- *   receives: 
- *      myCAM: ArduCAM camera class. Gives us access to control functions.  
- *      client: WiFi client opened -> |Already connected to the server| 
+ *   receives:
+ *      myCAM: ArduCAM camera class. Gives us access to control functions.
+ *      client: WiFi client opened -> |Already connected to the server|
  *      image: declared on top (pre-processor definitions) to identify each
  *             image when they are transmitted via HTTP.
- *   returns: nothing 
+ *   returns: nothing
  * ----------------------------
  */
 
 void read_fifo_burst_encode(ArduCAM myCAM, LWiFiClient client, char * image) {
-  char temp, temp_last; /*!< JPEG tail is composed by FF D9. Knowing which byte 
-                            was the last one helps us to identify the end of an image 
+  char temp, temp_last; /*!< JPEG tail is composed by FF D9. Knowing which byte
+                            was the last one helps us to identify the end of an image
                             to begin transmissions */
   uint32_t length = 0;
   char * image_chunk;
@@ -405,7 +405,7 @@ void read_fifo_burst_encode(ArduCAM myCAM, LWiFiClient client, char * image) {
     size_t encodedLen; /*!< Encoded image length */
     char * ptr_encoded_chunk; /*!< Auxiliar pointer to image chunks */
     /*!< Dynamically allocating memory space to image chunks (both raw and decoded) */
-    image_chunk = (char*) calloc (4000, sizeof(char)); 
+    image_chunk = (char*) calloc (4000, sizeof(char));
     if (image_chunk == NULL) return;
     encoded_chunk = (char*) calloc (5500, sizeof(char));
     if (encoded_chunk == NULL) return;
@@ -420,8 +420,8 @@ void read_fifo_burst_encode(ArduCAM myCAM, LWiFiClient client, char * image) {
     client.println(F("User-Agent: LinkIt/1.0"));
     client.println(F("Connection: keep-alive"));
     client.println(F("Content-Type: application/x-www-form-urlencoded"));
-    client.print(F("Content-Length: "));  /*!< Mandatory parameter (really important 
-                                          to calculate it well). Otherwise requests won't 
+    client.print(F("Content-Length: "));  /*!< Mandatory parameter (really important
+                                          to calculate it well). Otherwise requests won't
                                           reach the server */
     client.println(strlen(ID) + strlen(LINKIT_ID) + strlen(LAT_VAR) + strlen(buffer_latitude) + strlen(LON_VAR) + strlen(buffer_longitude) + strlen(TIMESTAMP) + strlen(timestamp) + strlen(image) + total_encoded_len);
     client.println();
@@ -441,11 +441,13 @@ void read_fifo_burst_encode(ArduCAM myCAM, LWiFiClient client, char * image) {
       temp =  SPI.transfer(0x00); /*!< Reading a byte from SPI */
       image_chunk[index] = temp; /*!< storing the new byte */
       index++;
-      /*!< If we took 3750 bytes or we finished reading, upload image chunk. 
+      /*!< If we took 3750 bytes (results in 5000 Base64 characters) or we finished reading, upload image chunk.
         3750 is the value calculated to avoid new dummy bytes introduced by Base64 encoding */
+      if ((temp == 0xD9) && (temp_last == 0xFF))
+        length = 0;
       if (index == 3750 || length == 0) {
         encoded_chunk = base64_encode(image_chunk, index, &encodedLen);
-        ptr_encoded_chunk = encoded_chunk; 
+        ptr_encoded_chunk = encoded_chunk;
         while (encodedLen > 0) {
           VM_TCP_RESULT0 = client.write((uint8_t *)ptr_encoded_chunk, encodedLen);
           if (VM_TCP_RESULT0 > 0 && encodedLen > 0) {
@@ -465,7 +467,7 @@ void read_fifo_burst_encode(ArduCAM myCAM, LWiFiClient client, char * image) {
   }
   free(image_chunk); /*!< Freeing dynamically allocated variables */
   free (encoded_chunk);
-  myCAM.CS_HIGH(); 
+  myCAM.CS_HIGH();
   return;
 }
 
@@ -474,12 +476,12 @@ void read_fifo_burst_encode(ArduCAM myCAM, LWiFiClient client, char * image) {
  * ----------------------------
  *   Used to parse server response in order to know if pictures have been transmitted
  *   correctly. A counter is incremented if succesfully transmitted. Once we have 4
- *   pictures transmitted, we are allowed to take another 4 pictures more.  
+ *   pictures transmitted, we are allowed to take another 4 pictures more.
  *
  *
- *   receives:  
- *      client: WiFi client opened waiting for server response 
- *   returns: nothing 
+ *   receives:
+ *      client: WiFi client opened waiting for server response
+ *   returns: nothing
  * ----------------------------
  */
 
@@ -513,12 +515,12 @@ void * get_http_response_pics(LWiFiClient client) {
 /*
  * Function: get_timestamp
  * ----------------------------
- *   Used to get a timestamp needed to identify photographs on the server. 
+ *   Used to get a timestamp needed to identify photographs on the server.
  *   Performs an HTTP GET request to the server in order to obtain it.
  *
- *   receives:  
- *      client: WiFi client opened waiting for server response 
- *   returns: timestamp (converted to String) 
+ *   receives:
+ *      client: WiFi client opened waiting for server response
+ *   returns: timestamp (converted to String)
  * ----------------------------
  */
 

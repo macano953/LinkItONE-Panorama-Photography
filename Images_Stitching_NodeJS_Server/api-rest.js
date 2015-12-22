@@ -45,7 +45,6 @@ app.listen(3000,'0.0.0.0' ,function(req,res,err) {
     res.send(err);
   }
   else{
-    handleDisconnect(); 
     util.log('API REST running on port 3000');
   }
 });

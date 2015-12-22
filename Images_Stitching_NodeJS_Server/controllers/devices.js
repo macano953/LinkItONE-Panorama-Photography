@@ -44,7 +44,6 @@ exports.uploadLinkit = function (req, res) {
  */
 
 function image_treatment(req, res) {
-	var fs = require('fs');
 	var image;
 	var error = "error";
 	var success = "OK";
@@ -70,7 +69,7 @@ function image_treatment(req, res) {
 	try {
 		require('lwip').open(image_decoded, 'jpg', function (err, image) {
 			if (err)
-				res.status(200).jsonp({
+				res.status(500).jsonp({
 					status : error
 				});
 			else {
@@ -79,7 +78,7 @@ function image_treatment(req, res) {
 				.rotate(0) // rotate clockwise (white fill) if needed. 
 				.writeFile(__dirname + '/images/' + req.body.timestamp.toString() +'_' + req.body.id + '_' + cam, function (err) {
 					if (err) {
-						res.status(200).jsonp({
+						res.status(500).jsonp({
 							status : error
 						});
 						console.log(err);
@@ -97,7 +96,7 @@ function image_treatment(req, res) {
 		});
 	} catch (ex) {
 		console.log('exception when opening lwip');
-		res.status(200).jsonp({
+		res.status(500).jsonp({
 			status : error
 		});
 	}

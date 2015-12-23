@@ -119,12 +119,12 @@ function image_treatment(req, res) {
 
 function generate_panorama(req, res) {
 	var panorama = require('panorama'),
-	path = require('path');
-	var genImagePath = path.join(__dirname + '/images/' + req.body.timestamp.toString() + '_' + req.body.id + '_' + 'panorama.jpg');
+	path = require('path');	
 	var back = path.join(__dirname + '/images/' + req.body.timestamp.toString() + '_' + req.body.id + '_' + 'CAM4.JPG');
 	var front = path.join(__dirname + '/images/' + req.body.timestamp.toString() + '_' + req.body.id + '_' + 'CAM2.JPG');
 	var left = path.join(__dirname + '/images/' + req.body.timestamp.toString() + '_' + req.body.id + '_' + 'CAM3.JPG');
 	var right = path.join(__dirname + '/images/' + req.body.timestamp.toString() + '_' + req.body.id + '_' + 'CAM1.JPG');
+	var genImagePath = path.join(__dirname + '/images/' + req.body.timestamp.toString() + '_' + req.body.id + '_' + 'panorama.jpg');
 
 	panorama.generate({
 		inputPaths : [front, right, back, left],
@@ -132,29 +132,20 @@ function generate_panorama(req, res) {
 		tempDir : path.join(__dirname, 'temp'),
 		debug : true // optional value in case you want to debug the individual panorama commands
 	}, function (err, outputPath) {
-		require('lwip').open(genImagePath, function (err, image) {
-			if (err)
-				console.log(err);
-			var _cropOpt = {
-				left : 100,
-				top : 0,
-				right : 2188,
-				bottom : 800
-			}; 
-			var _scaleOpt = {
-				width : 2048,
-				height : 1024
-			};
-			image.batch()
-			.resize(_scaleOpt.width, _scaleOpt.height)
-			.writeFile(outputPath, function (err) {
+			require('lwip').open(genImagePath, function (err, image) {
 				if (err)
 					console.log(err);
-				else {					
-					console.log('Panorama image successfully created!');
+				else
+				{			
+					image.batch()
+					.writeFile(outputPath, function (err) {
+						if (err)
+							console.log(err);
+						else				
+							console.log('Panorama successfully created!');
+					});
 				}
 			});
-		});
 	});
 }
 

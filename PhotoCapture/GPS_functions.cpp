@@ -294,17 +294,6 @@ void readSpeed(char* str,  GPSWaypoint* wayPoint){
 	*/
 
 	Serial.print(str);
-	Serial.println("->readSpeed");
-	
-    
-    float speed_temp;
-    int tmp = getComma(7, str);
-    speed_temp = getFloatNumber(&str[tmp]);
-    speed_temp *= 0.621371; // convert to miles per hour
-
-    Serial.println(speed_temp);
-
-    wayPoint->speed = speed_temp;
 	
 }
 

@@ -47,7 +47,6 @@ function image_treatment(req, res) {
 	var image;
 	var error = "error";
 	var success = "OK";
-	console.log('An image with timestamp '+ req.body.timestamp + ' is being treated...');
 	if (req.body.image1 !== undefined) {
 		image = req.body.image1;
 		var cam = 'CAM1.JPG';
@@ -63,7 +62,8 @@ function image_treatment(req, res) {
 	} else{
 		console.log("Not recognised image");
 		var cam = 'not_registered_CAM.JPG';
-	}
+	}	
+	console.log('An image with timestamp '+ req.body.timestamp +' from ' + req.body.id + '(' + cam.split('.')[0] + ') ' + 'is being treated...');
 	var image_decoded = new Buffer(image.replaceAll(" ", "+"), 'base64');	
 	image_decoded = image_decoded.slice(1, image_decoded.length);
 	try {
@@ -126,6 +126,7 @@ function generate_panorama(req, res) {
 	var right = path.join(__dirname + '/images/' + req.body.timestamp.toString() + '_' + req.body.id + '_' + 'CAM1.JPG');
 	var genImagePath = path.join(__dirname + '/images/' + req.body.timestamp.toString() + '_' + req.body.id + '_' + 'panorama.jpg');
 
+	console.log('Generating panorama with timestamp '+ req.body.timestamp +' from ' + req.body.id + '...');
 	panorama.generate({
 		inputPaths : [front, right, back, left],
 		outputFile : genImagePath,

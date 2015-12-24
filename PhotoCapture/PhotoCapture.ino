@@ -212,7 +212,7 @@ void setup() {
  */
 
 void loop() {
-  Serial.print("Everything configured properly. Let's take some pictures...");
+  Serial.println("Everything configured properly. Let's take some pictures...");
   Serial.println("Getting GPS Data");
   pic_checker = 0; /*!< Initialize pictures counter to 0 */
   LGPS.powerOn(); /*!< Get GPS data and upload location and speed*/
@@ -225,6 +225,10 @@ void loop() {
   buffer_longitude = new char[30];
   sprintf(buffer_longitude, "%2.6f", gpsPosition->longitude);
   LGPS.powerOff();
+  Serial.print(F("latitude: "));
+  Serial.println(buffer_latitude);
+  Serial.print(F("longitude: "));
+  Serial.println(buffer_longitude);
 
   Serial.println(F("ArduCAM start-up..."));
   /*!< Powering up cameras*/
@@ -285,7 +289,6 @@ void loop() {
   if (cam1 == true)
   {
     read_fifo_burst_encode(myCAM1, c, IMAGE1);
-    pic_checker++;
     get_http_response_pics(c);
     myCAM1.clear_fifo_flag();
   }
@@ -302,7 +305,6 @@ void loop() {
   if (cam2 == true)
   {
     read_fifo_burst_encode(myCAM2, c, IMAGE2);
-    pic_checker++;
     get_http_response_pics(c);
     myCAM2.clear_fifo_flag();
   }
@@ -319,7 +321,6 @@ void loop() {
   if (cam3 == true)
   {
     read_fifo_burst_encode(myCAM3, c, IMAGE3);
-    pic_checker++;
     get_http_response_pics(c);
     myCAM3.clear_fifo_flag();
   }
@@ -336,7 +337,6 @@ void loop() {
   if (cam4 == true)
   {
     read_fifo_burst_encode(myCAM4, c, IMAGE4);
-    pic_checker++;
     get_http_response_pics(c);
     myCAM4.clear_fifo_flag();
   }
@@ -485,28 +485,50 @@ void read_fifo_burst_encode(ArduCAM myCAM, LWiFiClient client, char * image) {
  * ----------------------------
  */
 
-void * get_http_response_pics(LWiFiClient client) {
+void get_http_response_pics(LWiFiClient client) {
   boolean disconnectedMsg = false;
+  char inBuffer [250];
+  int bufferIdx = 0;
+  String buff;
+  String aux;
+
+  // waiting for server response
+  Serial.println("waiting HTTP response:");
   // waiting for server response
   while (!client.available())
   {
     delay(100);
   }
-  // Make sure we are connected, and dump the response content to Serial
   while (client)
   {
     int v = client.read();
     if (v != -1)
     {
       Serial.print((char)v);
+      inBuffer[bufferIdx++] = (char)v;
+      aux += (char)v;
     }
     else
     {
       client.stop();
     }
   }
+  int json_array_start = aux.indexOf("{") + 11;
+  int json_array_end = aux.indexOf("}") - 1;
+  for (int i = json_array_start; i < json_array_end; i++) {
+    buff += inBuffer[i];
+  }
+  if (buff.equals("OK")){ 
+    pic_checker++;  
+    Serial.println(F(""));
+    Serial.println(F("Successfully uploaded!"));
+  }
+  else 
+    Serial.println(F("Error uploading picture"));
+    
   if (!disconnectedMsg)
   {
+    Serial.println(F(""));
     Serial.println(F("Disconnected by server"));
     disconnectedMsg = true;
   }
